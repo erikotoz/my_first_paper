@@ -15,16 +15,16 @@
 
 .. class:: center
 
-    :Название исследуемой задачи: Мое название работы
-    :Тип научной работы: M1P/НИР/CoIS
+    :Название исследуемой задачи: Применимость современных моделей детекции и сегментации к промышленным видеоданным: сравнение архитектур и оценка качества данных
+    :Тип научной работы: M1P
     :Автор: Имя Отчество Фамилия
-    :Научный руководитель: степень, Фамилия Имя Отчество
-    :Научный консультант(при наличии): степень, Фамилия Имя Отчество
+    :Научный руководитель: к.ф.-м.н., Гуров Сергей Исаевич
+    :Научный консультант(при наличии): PhD in CS, Илларионова Светлана Владимировна
 
 Abstract
 ========
 
-Purus sit amet luctus venenatis lectus magna fringilla. Condimentum id venenatis a condimentum vitae sapien. Auctor neque vitae tempus quam pellentesque nec nam aliquam. Eget egestas purus viverra accumsan in. Nam aliquam sem et tortor. Donec et odio pellentesque diam volutpat commodo. Odio pellentesque diam volutpat commodo sed egestas. Sit amet dictum sit amet justo. Pellentesque sit amet porttitor eget. Imperdiet sed euismod nisi porta lorem mollis aliquam ut. Quis varius quam quisque id diam vel quam elementum. Ornare lectus sit amet est placerat in. Vulputate dignissim suspendisse in est ante. Elit sed vulputate mi sit amet mauris. Egestas sed tempus urna et pharetra pharetra. Viverra tellus in hac habitasse platea dictumst vestibulum rhoncus.
+Задачи детекции и сегментации объектов в видеоданных активно развиваются благодаря достижениям глубокого обучения, однако перенос современных моделей в сферу производственных и эксплуатационных процессов сопровождается рядом вызовов. К их числу относятся ограниченность специализированных наборов данных, вариативность условий съемки и высокая сложность аннотации. В данной работе исследуются пайплайны обучения и применения state-of-the-art моделей компьютерного зрения, включая архитектуры на основе сверточных сетей и визуальных трансформеров, в контексте их адаптации к промышленным видеопотокам. Дополнительно рассматриваются методы выбора и оценки качества обучающих данных как ключевой фактор устойчивости и корректной интерпретации полученных результатов. Такой подход позволяет провести комплексное сравнение моделей и определить их применимость для задач интеллектуального мониторинга в реальных производственных сценариях.
 
 Research publications
 ===============================
