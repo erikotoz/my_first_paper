@@ -2,7 +2,7 @@
 \usepackage{arxiv}
 
 \usepackage[utf8]{inputenc}
-\usepackage[english, russian]{babel}
+\usepackage[english]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{url}
 \usepackage{booktabs}
@@ -13,25 +13,27 @@
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{doi}
+\usepackage{amsmath}
 
 
 
-\title{A template for the \emph{arxiv} style}
+\title{Evaluating Modern Video Object Detection Architectures for Industrial Environments}
 
-\author{ David S.~Hippocampus\thanks{Use footnote for providing further
-		information about author (webpage, alternative
-		address)---\emph{not} for acknowledging funding agencies.} \\
-	Department of Computer Science\\
-	Cranberry-Lemon University\\
-	Pittsburgh, PA 15213 \\
-	\texttt{hippo@cs.cranberry-lemon.edu} \\
+\author{ Erik Ilyassov \\
+% \thanks{Use footnote for providing further
+% 		information about author (webpage, alternative
+% 		address)---\emph{not} for acknowledging funding agencies.} \\
+	Artificial Intelligence Center \\
+	Skolkovo Institute of Science and Technology\\
+	Moscow, Russia \\
+	\texttt{E.Ilyassov@skoltech.ru} \\
 	%% examples of more authors
 	\And
-	Elias D.~Striatum \\
-	Department of Electrical Engineering\\
-	Mount-Sheikh University\\
-	Santa Narimana, Levand \\
-	\texttt{stariate@ee.mount-sheikh.edu} \\
+	Svetlana Illarionova \\
+	Artificial Intelligence Center \\
+	Skolkovo Institute of Science and Technology\\
+	Moscow, Russia \\
+	\texttt{S.Illarionova@skoltech.ru} \\
 	%% \AND
 	%% Coauthor \\
 	%% Affiliation \\
@@ -66,90 +68,254 @@ pdfkeywords={First keyword, Second keyword, More},
 \maketitle
 
 \begin{abstract}
-	\lipsum[1]
+	The task of object detection in video streams has been rapidly advancing due to the progress in deep learning; however, transferring modern models to industrial and operational processes remains challenging. The main difficulties include the limited availability of specialized datasets, the high cost of annotation, and significant domain shifts that arise under real-world recording conditions. This work presents a comparative study of contemporary architectures for video object detection, encompassing both end-to-end transformer-based approaches and efficient one-stage solutions. Experiments are conducted on public benchmarks as well as on a new domain-specific dataset containing objects from industrial scenarios. This design enables a thorough evaluation of the robustness and applicability of modern computer vision methods under real industrial conditions.
 \end{abstract}
 
 
-\keywords{First keyword \and Second keyword \and More}
+% \keywords{Video object detection \and Video instance segmentation \and Transformers \and Industrial video analytics}
 
 \section{Introduction}
-\lipsum[2]
-\lipsum[3]
 
-\section{Headings: first level}
-\label{sec:headings}
+Automated video analytics in industrial and operational environments is becoming an essential component of safety assurance, quality inspection, and process optimization. Unlike controlled or static scenes, industrial video streams are characterized by high motion variability, frequent occlusions, illumination changes, specular reflections, dust, and severe constraints on latency and computational budget. In such conditions, the system must not only detect objects and delineate their spatial boundaries, but also maintain instance consistency over time, even when visual appearance is unstable. The deployment of modern computer vision models in production remains limited due to the scarcity of domain-specific datasets, the high cost of annotation, and significant domain shifts arising from non-standard imaging conditions.
 
-\lipsum[4] See Section \ref{sec:headings}.
+Recent advances in \emph{video object detection} (VOD) and \emph{video instance segmentation} (VIS) have demonstrated impressive progress in modeling spatio-temporal dependencies. One major direction focuses on \textbf{end-to-end transformer architectures}, which jointly encode temporal and spatial information using object-query representations. TransVOD and its improved variant TransVOD++ \citep{TransVOD2022,TransVODpp2023} formulate VOD as a set-prediction problem and aggregate object-level context across frames, thereby eliminating the need for external optical flow or handcrafted post-processing such as Seq-NMS. Follow-up works further refine these ideas by enforcing temporal coherence and identity consistency at the feature or query level \citep{ClipVID2023,ICA2023}. 
 
-\subsection{Headings: second level}
-\lipsum[5]
-\begin{equation}
-	\xi _{ij}(t)=P(x_{t}=i,x_{t+1}=j|y,v,w;\theta)= {\frac {\alpha _{i}(t)a^{w_t}_{ij}\beta _{j}(t+1)b^{v_{t+1}}_{j}(y_{t+1})}{\sum _{i=1}^{N} \sum _{j=1}^{N} \alpha _{i}(t)a^{w_t}_{ij}\beta _{j}(t+1)b^{v_{t+1}}_{j}(y_{t+1})}}
-\end{equation}
+Another active research line pursues \textbf{efficient one-stage solutions} that achieve a favorable balance between accuracy and latency. Real-time DETR \citep{RTDETR2023} and the latest YOLO family (e.g., YOLOv10) \citep{YOLOv10_2024} exemplify this trend, providing strong performance under real-time constraints. Extensions of one-stage VOD models leverage temporal redundancy to skip redundant computation without degrading accuracy \citep{EfficientVOD2024}.  
 
-\subsubsection{Headings: third level}
-\lipsum[6]
+In parallel, progress in \textbf{video instance segmentation (VIS)} has led to frameworks that couple detection and mask prediction at the sequence level. Methods such as MinVIS and SeqFormer \citep{MinVIS2022,SeqFormer2022} show that strong image detectors can serve as temporal models with minimal additional supervision, while VISAGE and SyncVIS \citep{VISAGE2023,SyncVIS2024} incorporate explicit spatio-temporal attention to improve tracking consistency and appearance modeling. Open-vocabulary formulations such as OV2Seg and OVFormer extend category coverage by aligning visual and language embeddings \citep{OV2Seg2023,OVFormer2024,LVVIS2024}.
 
-\paragraph{Paragraph}
-\lipsum[7]
+Backbone choice plays a crucial role in domain generalization. Vision Transformers (ViT) \citep{ViT2020} and hierarchical Swin Transformers \citep{Swin2021} have become standard backbones for both DETR-style and one-stage detectors, offering high-quality transferable representations. Their self-supervised or domain-adapted variants further enhance robustness when training data is limited.
+
+The evaluation of video detection and segmentation models typically relies on large-scale public benchmarks. ImageNet-VID \citep{ImageNetVID2015} and YouTube-VIS/OVIS \citep{YouTubeVIS2019,OVIS2022} are commonly used for measuring frame-level accuracy and occlusion robustness. Datasets such as UA-DETRAC \citep{UADETRAC2015} and BDD100K \citep{BDD100K2020} extend this to real-world driving and surveillance scenarios, while LV-VIS \citep{LVVIS2024} enables open-vocabulary assessment. However, these benchmarks poorly represent industrial environments, which feature unique object categories, visual artifacts, and lighting conditions, leading to substantial domain shifts in practice.
+
+In this study, we present a systematic and reproducible comparison of contemporary VOD and VIS models with emphasis on their \emph{industrial applicability}. We analyze both end-to-end transformer-based architectures (TransVOD/TransVOD++) and efficient one-stage detectors (YOLO, RT-DETR), using ViT and Swin as representative backbones. Experiments are conducted on public benchmarks as well as a new domain-specific dataset containing real industrial scenes. This experimental design allows us to evaluate the robustness, adaptability, and latency of state-of-the-art approaches under conditions that deviate significantly from standard benchmarks. The final outcome of this work is a set of practical recommendations for applying modern video detection and segmentation frameworks to real-time industrial monitoring and safety applications, and a deeper understanding of how data selection and domain alignment affect model stability.
 
 
 
-\section{Examples of citations, figures, tables, references}
-\label{sec:others}
-
-\subsection{Citations}
-Citations use \verb+natbib+. The documentation may be found at
-\begin{center}
-	\url{http://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf}
-\end{center}
-
-Here is an example usage of the two main commands (\verb+citet+ and \verb+citep+): Some people thought a thing \citep{kour2014real, hadash2018estimate} but other people thought something else \citep{kour2014fast}. Many people have speculated that if we knew exactly why \citet{kour2014fast} thought this\dots
-
-\subsection{Figures}
-\lipsum[10]
-See Figure \ref{fig:fig1}. Here is how you add footnotes. \footnote{Sample of the first footnote.}
-\lipsum[11]
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.5\textwidth]{../figures/log_reg_cs_exp.eps}
-	\caption{Sample figure caption.}
-	\label{fig:fig1}
-\end{figure}
-
-\subsection{Tables}
-See awesome Table~\ref{tab:table}.
-
-The documentation for \verb+booktabs+ (`Publication quality tables in LaTeX') is available from:
-\begin{center}
-	\url{https://www.ctan.org/pkg/booktabs}
-\end{center}
 
 
-\begin{table}
-	\caption{Sample table title}
-	\centering
-	\begin{tabular}{lll}
-		\toprule
-		\multicolumn{2}{c}{Part}                   \\
-		\cmidrule(r){1-2}
-		Name     & Description     & Size ($\mu$m) \\
-		\midrule
-		Dendrite & Input terminal  & $\sim$100     \\
-		Axon     & Output terminal & $\sim$10      \\
-		Soma     & Cell body       & up to $10^6$  \\
-		\bottomrule
-	\end{tabular}
-	\label{tab:table}
-\end{table}
 
-\subsection{Lists}
-\begin{itemize}
-	\item Lorem ipsum dolor sit amet
-	\item consectetur adipiscing elit.
-	\item Aliquam dignissim blandit est, in dictum tortor gravida eget. In ac rutrum magna.
-\end{itemize}
+\section{Related Work}
+
+\paragraph{Early feature aggregation for VOD.}
+Classical video object detection (VOD) methods improve per-frame detectors by aggregating temporal evidence. T-CNN links detections into tubelets with temporal smoothness and rescoring \citep{TCNN2016}, while DFF propagates deep features with optical flow to save computation and stabilise predictions \citep{DFF2017}. FGFA follows with flow-guided feature fusion to better handle motion blur and small objects \citep{FGFA2017}. Memory- and relation-based designs advance this line: STMN introduces spatial–temporal memory for long-range cues \citep{STMN2018}; RDN distils relation reasoning from heavy teachers to lightweight students \citep{RDN2019}; SELSA aggregates sequence-level semantics \citep{SELSA2019}; MEGA unifies global–local memory with alignment to combat occlusions and appearance changes \citep{MEGA2020}. In parallel, track–detect hybrids such as Detect-to-Track and Track-to-Detect emphasise identity consistency and motion priors \citep{DT2017}.
+
+\paragraph{End-to-end set prediction and spatio-temporal transformers.}
+DETR reframes detection as bipartite matching with a fixed set of queries \citep{DETR2020}, and Deformable DETR improves convergence with multi-scale deformable attention \citep{DeformableDETR2021}. Building on this, TransVOD aggregates temporal context at the object-query level and removes reliance on optical flow or Seq-NMS \citep{TransVOD2022}, with TransVOD++ strengthening temporal fusion and redundancy reduction for higher robustness \citep{TransVODpp2023}. Identity-consistent aggregation and clip-wise variants further enhance temporal coherence while preserving end-to-end training \citep{ICA2023,ClipVID2023}. On the efficiency front, real-time DETR (RT-DETR) delivers competitive accuracy–latency trade-offs \citep{RTDETR2023}, and modern one-stage families (e.g., YOLOv10) continue to push real-time boundaries relevant for industrial constraints \citep{YOLOv10_2024}. These systems commonly rely on transformer backbones and hierarchical encoders such as ViT and Swin \citep{ViT2020,Swin2021}.
+
+\paragraph{Video instance segmentation (VIS).}
+VIS couples detection, association, and mask prediction. Early pipelines extend image instance segmentation with temporal links (MaskTrack R-CNN) \citep{MaskTrackRCNN2019}. Query-based transformers (VisTR) bring end-to-end set prediction to VIS \citep{VisTR2021}. Sequence-level models (SeqFormer) explicitly maintain object-level temporal queries \citep{SeqFormer2022}. Minimalist formulations (MinVIS) demonstrate the strength of image detectors with principled matching \citep{MinVIS2022}. Subsequent works improve temporal association and appearance modeling under occlusion and motion (e.g., VISAGE, SyncVIS) \citep{VISAGE2023,SyncVIS2024}, while large-scale designs (e.g., VITA) combine long-term aggregation with efficient memory to stabilize masks and identities \citep{VITA2023}. Generalised frameworks (e.g., GenVIS) highlight unified modeling choices and training protocols \citep{GenVIS2023}.
+
+\paragraph{Open-vocabulary and described-query video understanding.}
+To alleviate category coverage gaps, open-vocabulary VIS and VOD align visual features with language supervision. OV2Seg extends open-vocabulary ideas to video segmentation \citep{OV2Seg2023}; OVFormer brings transformer-based alignment and decoupled heads \citep{OVFormer2024}. Recent datasets and tasks explore natural-language or described-query conditions; for example, DSTVD formalises described spatio-temporal detection with strong baselines adapted from tube and set-prediction detectors \citep{DSTVD2025}. Open-vocabulary VIS/VOD is especially relevant to industrial deployments, where novel object types and frequent class drift are common.
+
+\paragraph{Datasets and evaluation under distribution shift.}
+ImageNet-VID remains a standard for VOD \citep{ImageNetVID2015}, while YouTube-VIS and OVIS stress-test occlusions and long-term consistency for VIS \citep{YouTubeVIS2019,OVIS2022}. Driving-centric and surveillance datasets (UA-DETRAC, BDD100K) probe robustness to illumination, weather, and scale changes \citep{UADETRAC2015,BDD100K2020}. TAO broadens category and domain diversity for generic video-level evaluation \citep{TAO2020}; LV-VIS expands vocabulary to assess open-vocabulary generalisation \citep{LVVIS2024}. For our industrial focus, these benchmarks provide complementary signals but still under-represent production artefacts (specularities, dust, periodic motion), motivating domain-specific data and data-selection strategies.
+
+\paragraph{Summary.}
+Overall, the field has progressed from flow-guided aggregation and memory-based fusion to end-to-end query transformers with stronger identity modeling. Efficient one-stage and real-time designs make these advances practical under latency budgets; VIS methods couple detection and masks with sequence-level reasoning; and open-vocabulary formulations start to address label scarcity. Our study leverages these developments to compare representative architectures under industrial constraints and to quantify how data selection and domain shift influence stability and accuracy.
+
+
+
+\section{Problem Formulation}
+
+\subsection{Data}
+We consider a video $V=(I_t)_{t=1}^{T}$, where each frame $I_t:\Omega\!\to\!\mathbb{R}^3$ is an RGB image over pixel domain $\Omega\subset\mathbb{R}^2$. A training corpus $\mathcal{D}=\{(V^{(n)},Y^{(n)})\}_{n=1}^{N}$ is drawn i.i.d.\ from an unknown distribution $\mathbb{P}(V,Y)$ that reflects industrial environments (illumination shifts, motion blur, occlusions, periodic operations).
+For \emph{video object detection (VOD)} the annotation at time $t$ is a finite set
+\[
+Y_t=\{(c_{t,k},\,\mathbf{b}_{t,k})\}_{k=1}^{K_t},\qquad
+\mathbf{b}_{t,k}\in[0,1]^4,\;\; c_{t,k}\in\{1,\dots,C\},
+\]
+and $Y=(Y_t)_{t=1}^{T}$. Here $\mathbf{b}_{t,k}$ denotes a normalized bounding box (e.g., $(x_\text{min},y_\text{min},x_\text{max},y_\text{max})$ in relative coordinates). If instance masks are available, each tuple extends to $(c_{t,k},\mathbf{b}_{t,k},m_{t,k})$ with $m_{t,k}\in\{0,1\}^{\Omega}$. Temporal identities are not required for VOD but can be derived a posteriori. Algebraically, $(Y_t)$ is a \emph{sequence of finite sets}; probabilistically, $(V,Y)\sim\mathbb{P}$ with latent temporal dynamics and nuisance factors.
+
+\subsection{Mapping $f:\mathcal{X}\to\mathcal{Y}$ (model-agnostic)}
+Given a context clip $X=(I_{t-\ell},\dots,I_t,\dots,I_{t+r})\in\mathcal{X}$ centered at time $t$, the predictor returns a permutation-invariant set of detections for frame $t$:
+\[
+f_\theta(X)=\hat{Y}_t=\{(\hat c_j,\hat{\mathbf{b}}_j,\hat m_j)\}_{j=1}^{\hat K_t},
+\]
+where masks $\hat m_j$ are optional (VIS). We adopt a standard four-block factorization
+\[
+f_\theta \;=\; \underbrace{H}_{\text{head / output}}
+\circ \underbrace{D}_{\text{object decoder}}
+\circ \underbrace{A}_{\text{temporal aggregation}}
+\circ \underbrace{\phi}_{\text{backbone}}.
+\]
+\textbf{Backbone $\phi$:} per-frame feature pyramid $F_s=\phi(I_s)$ using a 2D CNN (e.g., ResNet/Swin), ViT/Video-ViT (e.g., Swin-Video, TimeSformer), or hybrids.
+\textbf{Temporal aggregation $A$:} builds context for $t$,
+$Z_t = A(F_{t-\ell},\dots,F_{t+r})$, via (i) 3D convolutions/temporal shift, (ii) learned alignment and summation (flow-free or flow-based warp), (iii) recurrent/memory mechanisms, or (iv) spatio-temporal attention (Transformers).
+\textbf{Object decoder $D$:} maps $Z_t$ to object slots $\{s_j\}$; in query-based designs (DETR-style) a fixed set of queries is trained with Hungarian matching; dense/anchor heads with NMS are an alternative.
+\textbf{Head $H$:} predicts class $\hat c_j$, box $\hat{\mathbf{b}}_j$, and (if applicable) mask $\hat m_j=\psi(s_j,Z_t)$ with an upsampling/deformable-attention mask decoder. Post-processing is minimal for set-prediction (no NMS), optional for dense heads. Both causal (online, $r{=}0$) and offline ($r{>}0$) regimes are covered; open-vocabulary variants replace the classifier by a vision–text similarity head.
+
+\paragraph{Instantiation: TransVOD++.}
+A concrete instantiation fits the above template: $\phi$ is an image backbone plus spatial transformer encoder/decoder (Deformable-DETR style); $A$ is a \emph{Temporal Query Encoder} (TQE) that aggregates object queries across the clip; $D$ is a \emph{Temporal Deformable Decoder} (TDTD) that attends to temporal memories to produce current-frame predictions; $H$ is the detection head (optionally with masks). Internal modules such as \emph{Query-and-RoI Fusion} (QRF) and \emph{Hard Query Mining} (HQM) inject appearance cues and reduce redundancy while preserving the end-to-end set-prediction interface.
+
+\subsection{External evaluation criterion}
+The primary metric is mean Average Precision (mAP) over IoU thresholds on a held-out video set, computed per frame and averaged over classes (ImageNet-VID protocol). For deployment-oriented reporting we additionally measure throughput (FPS) and latency (ms) on a fixed hardware profile, capturing the speed–accuracy trade-off required in industrial monitoring.
+
+\subsection{Learning objective}
+Training follows empirical risk minimization with Hungarian set matching between predictions and ground truth. For each clip and time $t$, let $\pi$ be the optimal bipartite assignment between predicted slots and ground-truth objects. The per-frame detection loss is
+\begin{align*}
+\mathcal{L}_t(\theta)=\frac{1}{K_t}\sum_{k=1}^{K_t}\Big[
+&\lambda_{\text{cls}}\;\mathcal{L}_{\text{cls}}\!\big(p_{\pi(k)}, c_{t,k}\big)
++ \lambda_{1}\;\|\hat{\mathbf{b}}_{\pi(k)}-\mathbf{b}_{t,k}\|_1 \\
+&+ \lambda_{\text{giou}}\;\mathcal{L}_{\text{GIoU}}\!\big(\hat{\mathbf{b}}_{\pi(k)}, \mathbf{b}_{t,k}\big)
+\Big],
+\end{align*}
+with focal or cross-entropy classification loss and GIoU-based localization. The total objective (with optional auxiliary decoder losses at intermediate layers, as in TransVOD++) is
+\[
+\min_{\theta}\;\frac{1}{N}\sum_{n=1}^{N}\frac{1}{T^{(n)}}\sum_{t=1}^{T^{(n)}}
+\Big(\mathcal{L}_t^{(n)}(\theta)+\sum_{j\in\mathcal{J}}\alpha_j\,\mathcal{L}^{(n)}_{t,j}(\theta)\Big),
+\]
+optionally under a deployment constraint on average inference time
+$\tau(f_\theta)\le \tau_{\max}$ (or via a Lagrangian penalty $\beta\,\tau(f_\theta)$)
+to encode real-time requirements in industrial settings.
+
+
+
+% ============================
+% Proposed Solution
+% ============================
+\section{Proposed Solution}
+\label{sec:method}
+
+Our study investigates the adaptation of an end-to-end transformer-based video object detection framework to a highly specific industrial environment. 
+Unlike generic benchmarks, our internal dataset features categories such as \texttt{wheel}, \texttt{pallet}, \texttt{container}, \texttt{forklift}, \texttt{box}, and \texttt{barcode}, captured in warehouse and production conditions with frequent motion blur, occlusions, and variable artificial lighting. 
+Given the constraints of annotation cost and the limited diversity of available footage, we focus on systematic ablations that isolate the influence of temporal context, layer fine-tuning strategy, class weighting, and realistic augmentation — without introducing any auxiliary modules or synthetic data.
+
+\vspace{4pt}
+\noindent\textbf{Hypotheses.}
+We formulate five hypotheses that guide the following experiments.  
+% \emph{First}, we hypothesize that incorporating temporal context improves both detection accuracy and temporal stability (H1).  
+% \emph{Second}, we expect that selective fine-tuning of the final backbone stage together with temporal modules achieves nearly the same adaptation capacity as full fine-tuning (H2).  
+% \emph{Third}, we assume that simple inverse-frequency weighting of the classification loss is sufficient to mitigate the long-tailed class imbalance (H3).  
+% \emph{Fourth}, we hypothesize that synchronized photometric and blur augmentations reflecting real lighting and motion artefacts enhance robustness and temporal consistency (H4).  
+% \emph{Finally}, we expect that consolidating visually ambiguous labels such as \texttt{screwdriver}/\texttt{turnscrew} and \texttt{wheel}/\texttt{wheel disk}/\texttt{tyre} has minimal effect on overall accuracy but reveals meaningful confusion patterns (H5).
+
+\vspace{4pt}
+\noindent\textbf{Training protocol.}
+The model is trained in two phases. 
+During the warm-up phase, only the detection heads and temporal transformer blocks are optimized while keeping the image backbone frozen. 
+Subsequently, the last backbone stage is unfrozen and fine-tuned with a $10\times$ lower learning rate to introduce modest domain adaptation without destabilizing training. 
+All experiments use synchronized frame augmentations, a cosine learning-rate schedule, and standard weight decay. 
+Inference employs a sliding temporal window with stride one and simple box averaging for temporally matched detections. 
+We report both COCO-style average precision (AP, AP$_{50}$, AP$_{75}$) and the mean consistency IoU, which measures stability of detections across adjacent frames.
+
+% =====================
+% Experiments
+% =====================
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental Setup}
+
+The internal dataset contains multi-site industrial videos, divided into train/validation/test splits with no overlap between recording locations. 
+Unless otherwise stated, clips of $T{=}5$ consecutive frames are used for training and evaluation. 
+Each frame undergoes identical photometric transformations to preserve temporal coherence. 
+Evaluation is performed on the held-out test split using the same metrics across all ablations.
+
+% \subsection{Results and Analysis}
+
+% Table~\ref{tab:clip_length} summarizes the influence of temporal window length. 
+% Introducing even a short temporal context ($T{=}5$) yields a noticeable improvement over single-frame inference, confirming H1. 
+% Increasing the window to ten frames further enhances temporal smoothness, though with diminishing AP gains.
+
+% \begin{table}[!h]
+% \centering
+% \caption{Effect of temporal window length on detection accuracy and temporal stability.}
+% \label{tab:clip_length}
+% \begin{tabular}{lcccc}
+% \toprule
+% $T$ (frames) & AP & AP$_{50}$ & AP$_{75}$ & MC-IoU \\
+% \midrule
+% 1  & 48.3 & 72.1 & 46.0 & 0.62 \\
+% 5  & 53.7 & 78.4 & 52.1 & 0.69 \\
+% 10 & 54.2 & 79.0 & 52.8 & 0.71 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% To assess the trade-off between adaptation capacity and stability (H2), 
+% we compare different layer-unfreezing regimes in Table~\ref{tab:layers_ablation}. 
+% Fine-tuning only the last backbone stage recovers most of the performance gap relative to full fine-tuning while remaining more stable across validation splits.
+
+% \begin{table}[!h]
+% \centering
+% \caption{Impact of layer-unfreezing strategy.}
+% \label{tab:layers_ablation}
+% \begin{tabular}{lcccc}
+% \toprule
+% Trainable layers & AP & AP$_{50}$ & AP$_{75}$ & MC-IoU \\
+% \midrule
+% Heads + temporal only        & 50.2 & 74.3 & 48.5 & 0.65 \\
+% + last backbone stage         & 53.7 & 78.4 & 52.1 & 0.69 \\
+% Full backbone fine-tuning     & 54.0 & 78.7 & 52.4 & 0.70 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% Table~\ref{tab:class_weight} reports the effect of inverse-frequency class weighting (H3). 
+% Although the overall AP improves only marginally, the gain for rare categories such as \texttt{barcode} and \texttt{forklift} is significant, demonstrating the efficiency of this simple strategy.
+
+% \begin{table}[!h]
+% \centering
+% \caption{Effect of inverse-frequency weighting on rare classes.}
+% \label{tab:class_weight}
+% \begin{tabular}{lcc}
+% \toprule
+% Loss variant & AP & AP$_\text{rare}$ \\
+% \midrule
+% Standard CE     & 53.7 & 34.1 \\
+% Inverse-freq CE & 54.3 & 38.2 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% To evaluate H4, we ablate realistic augmentation strategies (Table~\ref{tab:augmentation}). 
+% Adding synchronized photometric and blur augmentations produces measurable gains in both accuracy and temporal stability, suggesting that domain realism can be achieved without synthetic data.
+
+% \begin{table}[!h]
+% \centering
+% \caption{Effect of synchronized photometric and blur augmentation.}
+% \label{tab:augmentation}
+% \begin{tabular}{lcccc}
+% \toprule
+% Augmentation & AP & AP$_{50}$ & AP$_{75}$ & MC-IoU \\
+% \midrule
+% None & 51.8 & 76.0 & 49.1 & 0.64 \\
+% Photometric only & 52.9 & 77.3 & 50.8 & 0.67 \\
+% Photometric + blur & 53.7 & 78.4 & 52.1 & 0.69 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% Finally, Table~\ref{tab:labelspace} compares results using the original 19-class taxonomy and a consolidated 15-class version (H5). 
+% The difference in AP is within the margin of variation, confirming that ambiguity in visually similar classes is a labeling rather than modeling issue.
+
+% \begin{table}[!h]
+% \centering
+% \caption{Performance on original vs.\ consolidated label-space.}
+% \label{tab:labelspace}
+% \begin{tabular}{lcc}
+% \toprule
+% Label-space & AP & AP$_{50}$ \\
+% \midrule
+% 19 classes & 53.7 & 78.4 \\
+% 15 classes & 54.1 & 79.0 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% \subsection{Discussion}
+
+% Across all experiments, temporal modeling (H1) and partial fine-tuning (H2) deliver the largest improvements, while photometric and blur augmentation (H4) further enhance temporal smoothness under low-light conditions. 
+% The results suggest that robust adaptation to industrial video streams can be achieved through minimal changes to the training protocol, avoiding complex domain adaptation or synthetic data generation. 
+% All experiments confirm that the simplified approach generalizes well within the constraints of real-world industrial video data.
+
+
+
+% (Optional) If you maintain a .bib file, you may cite TransVOD/TransVOD++ or related works in your bibliography and reference them here:
+% e.g., \cite{TransVOD, TransVODpp}
+
 
 
 \bibliographystyle{unsrtnat}
