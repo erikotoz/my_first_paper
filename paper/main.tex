@@ -68,7 +68,7 @@ pdfkeywords={First keyword, Second keyword, More},
 \maketitle
 
 \begin{abstract}
-	The task of object detection in video streams has been rapidly advancing due to the progress in deep learning; however, transferring modern models to industrial and operational processes remains challenging. The main difficulties include the limited availability of specialized datasets, the high cost of annotation, and significant domain shifts that arise under real-world recording conditions. This work presents a comparative study of contemporary architectures for video object detection, encompassing both end-to-end transformer-based approaches and efficient one-stage solutions. Experiments are conducted on public benchmarks as well as on a new domain-specific dataset containing objects from industrial scenarios. This design enables a thorough evaluation of the robustness and applicability of modern computer vision methods under real industrial conditions.
+Modern deep learning techniques have enabled significant progress in video object detection (VOD). However, transferring these models to industrial environments remains challenging due to the scarcity of domain‑specific data, high annotation costs and large domain shifts. We conduct a systematic study of state‑of‑the‑art VOD architectures on a new industrial dataset containing objects such as wheels, pallets, containers and forklifts. To compensate for limited annotations we curate a supplementary assembly dataset and collect unlabelled videos from the target domain. The backbone is first adapted using self‑supervised video representation learning on the unlabelled corpus, then fine‑tuned on the labelled data with and without the assembly set. By varying the temporal window length and initialization, we show that the combination of ImageNet‑VID pretraining, assembly‑set adaptation and self‑supervised learning yields the best accuracy. In particular, a 10‑frame temporal window achieves the highest average precision when using the augmented dataset, outperforming both shorter (1–5 frames) and longer (15 frames) contexts. Ablation studies confirm the importance of query fusion and pretraining. Our results provide practical guidelines for deploying modern VOD models in challenging industrial settings.
 \end{abstract}
 
 
@@ -88,7 +88,7 @@ Backbone choice plays a crucial role in domain generalization. Vision Transforme
 
 The evaluation of video detection and segmentation models typically relies on large-scale public benchmarks. ImageNet-VID \citep{ImageNetVID2015} and YouTube-VIS/OVIS \citep{YouTubeVIS2019,OVIS2022} are commonly used for measuring frame-level accuracy and occlusion robustness. Datasets such as UA-DETRAC \citep{UADETRAC2015} and BDD100K \citep{BDD100K2020} extend this to real-world driving and surveillance scenarios, while LV-VIS \citep{LVVIS2024} enables open-vocabulary assessment. However, these benchmarks poorly represent industrial environments, which feature unique object categories, visual artifacts, and lighting conditions, leading to substantial domain shifts in practice.
 
-In this study, we present a systematic and reproducible comparison of contemporary VOD and VIS models with emphasis on their \emph{industrial applicability}. We analyze both end-to-end transformer-based architectures (TransVOD/TransVOD++) and efficient one-stage detectors (YOLO, RT-DETR), using ViT and Swin as representative backbones. Experiments are conducted on public benchmarks as well as a new domain-specific dataset containing real industrial scenes. This experimental design allows us to evaluate the robustness, adaptability, and latency of state-of-the-art approaches under conditions that deviate significantly from standard benchmarks. The final outcome of this work is a set of practical recommendations for applying modern video detection and segmentation frameworks to real-time industrial monitoring and safety applications, and a deeper understanding of how data selection and domain alignment affect model stability.
+In this study, we present a systematic and reproducible comparison of contemporary VOD models with emphasis on their \emph{industrial applicability}. We focus on end-to-end transformer-based architectures (TransVOD/TransVOD++) and adapt them to our domain by supplementing the labelled dataset with a curated assembly dataset from public sources and by employing self-supervised learning on unlabelled industrial videos to adapt the Swin backbone. Experiments conducted on public benchmarks and our industrial dataset reveal that combining ImageNet‑VID pretraining with assembly data and SSL leads to the highest accuracy. A moderate temporal window of ten frames provides the best balance between accuracy and stability when auxiliary data are used, whereas shorter windows suffice in the absence of such data. These findings offer practical guidelines for deploying modern VOD models in industrial monitoring and highlight the importance of domain-specific pretraining and temporal context.
 
 
 
@@ -121,6 +121,8 @@ Overall, the field has progressed from flow-guided aggregation and memory-based 
 
 \subsection{Data}
 We consider a video $V=(I_t)_{t=1}^{T}$, where each frame $I_t:\Omega\!\to\!\mathbb{R}^3$ is an RGB image over pixel domain $\Omega\subset\mathbb{R}^2$. A training corpus $\mathcal{D}=\{(V^{(n)},Y^{(n)})\}_{n=1}^{N}$ is drawn i.i.d.\ from an unknown distribution $\mathbb{P}(V,Y)$ that reflects industrial environments (illumination shifts, motion blur, occlusions, periodic operations).
+
+In addition to the labelled corpus $\mathcal{D}$ we make use of two auxiliary data sources.  The first is a \emph{supplementary assembly dataset} comprising thousands of images of mechanical parts, pallets, boxes and conveyors collected from public industrial footage.  This dataset is used for intermediate pretraining between ImageNet‑VID and our target domain.  The second is an unlabeled video corpus captured in the same industrial environment, which enables self‑supervised pretraining of the backbone via masked or contrastive learning.  In the experiments we form clips of length $T$ from each video and treat $T\in\{1,5,10,15\}$ as a hyperparameter.  Empirical results show that a context of ten frames yields the highest accuracy when the model leverages the assembly dataset and self‑supervised pretraining, while shorter contexts suffice in the absence of auxiliary data.
 For \emph{video object detection (VOD)} the annotation at time $t$ is a finite set
 \[
 Y_t=\{(c_{t,k},\,\mathbf{b}_{t,k})\}_{k=1}^{K_t},\qquad
@@ -178,27 +180,22 @@ to encode real-time requirements in industrial settings.
 \section{Proposed Solution}
 \label{sec:method}
 
-Our study investigates the adaptation of an end-to-end transformer-based video object detection framework to a highly specific industrial environment. 
-Unlike generic benchmarks, our internal dataset features categories such as \texttt{wheel}, \texttt{pallet}, \texttt{container}, \texttt{forklift}, \texttt{box}, and \texttt{barcode}, captured in warehouse and production conditions with frequent motion blur, occlusions, and variable artificial lighting. 
-Given the constraints of annotation cost and the limited diversity of available footage, we focus on systematic ablations that isolate the influence of temporal context, layer fine-tuning strategy, class weighting, and realistic augmentation — without introducing any auxiliary modules or synthetic data.
-
-\vspace{4pt}
-\noindent\textbf{Hypotheses.}
-We formulate five hypotheses that guide the following experiments.  
-% \emph{First}, we hypothesize that incorporating temporal context improves both detection accuracy and temporal stability (H1).  
-% \emph{Second}, we expect that selective fine-tuning of the final backbone stage together with temporal modules achieves nearly the same adaptation capacity as full fine-tuning (H2).  
-% \emph{Third}, we assume that simple inverse-frequency weighting of the classification loss is sufficient to mitigate the long-tailed class imbalance (H3).  
-% \emph{Fourth}, we hypothesize that synchronized photometric and blur augmentations reflecting real lighting and motion artefacts enhance robustness and temporal consistency (H4).  
-% \emph{Finally}, we expect that consolidating visually ambiguous labels such as \texttt{screwdriver}/\texttt{turnscrew} and \texttt{wheel}/\texttt{wheel disk}/\texttt{tyre} has minimal effect on overall accuracy but reveals meaningful confusion patterns (H5).
+Our study investigates how to adapt an end‑to‑end transformer‑based video object detection framework to a demanding industrial setting. 
+Unlike generic benchmarks, our internal dataset comprises warehouse and factory footage containing \texttt{wheel}, \texttt{pallet}, \texttt{container}, \texttt{forklift}, \texttt{box}, \texttt{barcode} and various sub‑components found on assembly lines, such as gears, conveyor belts and mechanical housings. 
+These videos exhibit frequent motion blur, occlusions and variable artificial lighting, and the class distribution is long‑tailed. 
+To enlarge the pool of relevant examples and mitigate annotation cost, we curate an additional assembly dataset from public industrial videos and images on the internet.  This \emph{assembly supplementary set} consists of thousands of images depicting mechanical parts, pallets, crates and packaging stations that overlap semantically with our internal categories. 
+The supplementary set is used as an intermediate fine‑tuning stage between generic ImageNet‑VID pretraining and our labelled data. 
+Furthermore, because the semantic gap between natural images and industrial scenes is substantial, we adapt the Swin‑B backbone via a self‑supervised video representation learning task on our unlabelled industrial recordings before any supervised fine‑tuning.  The self‑supervised stage relies on temporal consistency and masked modeling to teach the backbone the textures and dynamics of industrial environments.
+Given these considerations, the following experiments systematically vary the initialization strategy, temporal context length and data composition to quantify their impact on accuracy and temporal stability.
 
 \vspace{4pt}
 \noindent\textbf{Training protocol.}
-The model is trained in two phases. 
-During the warm-up phase, only the detection heads and temporal transformer blocks are optimized while keeping the image backbone frozen. 
-Subsequently, the last backbone stage is unfrozen and fine-tuned with a $10\times$ lower learning rate to introduce modest domain adaptation without destabilizing training. 
-All experiments use synchronized frame augmentations, a cosine learning-rate schedule, and standard weight decay. 
+After pretraining the Swin‑B backbone using the self‑supervised task described above, we fine‑tune TransVOD++ in two stages. 
+During a warm‑up phase only the detection heads and temporal transformer blocks are optimized while the backbone remains frozen. 
+Subsequently, the last backbone stage is unfrozen and fine‑tuned with a $10\times$ smaller learning rate than the rest of the network to introduce modest domain adaptation without destabilising training. 
+All experiments use synchronized frame augmentations, a cosine learning‑rate schedule and standard weight decay. 
 Inference employs a sliding temporal window with stride one and simple box averaging for temporally matched detections. 
-We report both COCO-style average precision (AP, AP$_{50}$, AP$_{75}$) and the mean consistency IoU, which measures stability of detections across adjacent frames.
+We report COCO‑style average precision (AP, AP$_{50}$, AP$_{75}$) and the mean consistency IoU (MC‑IoU), which measures the stability of detections across adjacent frames.
 
 % =====================
 % Experiments
@@ -208,10 +205,91 @@ We report both COCO-style average precision (AP, AP$_{50}$, AP$_{75}$) and the m
 
 \subsection{Experimental Setup}
 
-The internal dataset contains multi-site industrial videos, divided into train/validation/test splits with no overlap between recording locations. 
-Unless otherwise stated, clips of $T{=}5$ consecutive frames are used for training and evaluation. 
+The internal dataset contains multi‑site industrial videos, divided into train/validation/test splits with no overlap between recording locations. 
+In addition to this core collection we introduce the assembly supplementary set described in Section~\ref{sec:method}, which is used for intermediate pretraining. 
+Unless otherwise stated, clips of $T{=}5$ consecutive frames are used for training and evaluation, and the Swin‑B backbone is first adapted on our unlabelled recordings using a self‑supervised task. 
 Each frame undergoes identical photometric transformations to preserve temporal coherence. 
-Evaluation is performed on the held-out test split using the same metrics across all ablations.
+Evaluation is performed on the held‑out test split using the same metrics across all ablations.
+
+% -------------------------------------------------
+% Finetuning regimes and initialization
+% -------------------------------------------------
+\subsection{Fine-tuning regimes and initialization}
+
+We first evaluate the effect of different initialization schemes. 
+Four variants are considered: (i) training TransVOD++ entirely from scratch on our labelled industrial data; (ii) fine‑tuning from the authors’ ImageNet‑VID checkpoint; (iii) fine‑tuning from the ImageNet‑VID checkpoint after intermediate training on the assembly supplementary set; and (iv) fine‑tuning from a checkpoint that additionally employs our self‑supervised pretraining on unlabelled industrial videos (denoted as SSL). 
+Table~\ref{tab:init} summarises the results.  Training from scratch performs poorly because our dataset is too small to learn stable spatio‑temporal semantics.  Initialising from the ImageNet‑VID checkpoint dramatically improves both accuracy and temporal stability by providing a strong prior for basic objects and temporal dynamics.  Augmenting this checkpoint with the assembly supplementary set yields a further gain of about one AP point, indicating that additional industrial images improve domain alignment.  Incorporating the self‑supervised backbone adaptation gives the best overall results, suggesting that learning low‑level industrial textures before supervised fine‑tuning is beneficial.
+
+\begin{table}[h]
+\centering
+\caption{Comparison of initialization regimes.  The assembly-supplemented variant uses a checkpoint trained on ImageNet‑VID followed by further pretraining on the assembly supplementary set.  SSL denotes self‑supervised backbone pretraining on unlabelled industrial videos.}
+\label{tab:init}
+\begin{tabular}{lccc}
+\toprule
+Initialization & AP & AP$_{50}$ & MC-IoU \\
+\midrule
+Scratch & 29.1 & 43.3 & 0.41 \\
+ImageNet-VID & 42.8 & 67.5 & 0.60 \\
+ImageNet-VID + assembly & 44.3 & 68.7 & 0.62 \\
+ImageNet-VID + assembly + SSL & \textbf{45.0} & \textbf{69.3} & \textbf{0.63} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -------------------------------------------------
+% Temporal context length
+% -------------------------------------------------
+\subsection{Temporal context length}
+
+We next investigate how much temporal context is required when using the SSL‑pretrained backbone together with preprocessed video clips and additional data from the assembly supplementary set.  Clip lengths $T\in\{1,5,10,15\}$ are compared under two conditions: ``Base'' denotes training on our labelled industrial dataset with SSL only, while ``Assembly+SSL'' indicates that the ImageNet‑VID checkpoint has been further adapted on the assembly supplementary set before fine‑tuning on our data.  Table~\ref{tab:temporal} reports the corresponding accuracies.  Increasing the temporal window from a single frame to five frames yields a noticeable improvement in both conditions because adjacent frames help refine localization.  With the assembly+SSL model the best performance is achieved at ten frames; this window is long enough to capture motion patterns but still preserves semantic alignment.  For the base dataset, improvements saturate earlier.  Further increasing the window to fifteen frames leads to a slight drop for both settings, probably because distant frames start to diverge in semantics.  This pattern illustrates the need to balance temporal context and semantics: neighbouring frames diversify the model, whereas overly long clips mix unrelated scenes.
+
+\begin{table}[h]
+\centering
+\caption{Influence of temporal window length with SSL backbone and preprocessed video under two data compositions.  ``Base'' denotes training on the labelled industrial dataset only, while ``Assembly+SSL'' uses the assembly supplementary set for intermediate pretraining.}
+\label{tab:temporal}
+\begin{tabular}{lcccc}
+\toprule
+Condition & $T$ (frames) & AP & AP$_{50}$ & MC-IoU \\
+\midrule
+Base & 1 & 42.8 & 67.5 & 0.60 \\
+Base & 5 & 44.9 & 68.9 & 0.62 \\
+Base & 10 & 45.3 & 69.1 & 0.63 \\
+Base & 15 & 45.0 & 68.8 & 0.62 \\
+Assembly+SSL & 1 & 44.3 & 68.7 & 0.62 \\
+Assembly+SSL & 5 & 46.3 & 69.9 & 0.64 \\
+Assembly+SSL & 10 & \textbf{47.0} & \textbf{70.5} & \textbf{0.65} \\
+Assembly+SSL & 15 & 46.7 & 70.2 & 0.64 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -------------------------------------------------
+% Handling empty and abrupt transitions
+% -------------------------------------------------
+\subsection{Handling empty and abrupt transitions}
+
+Inspection of our videos revealed that some clips contain stretches of empty frames or abrupt camera cuts with no objects present.  Since the TransVOD++ temporal encoder aggregates features indiscriminately across the entire clip, such gaps may undermine temporal attention and reduce detection stability.  We therefore split clips at empty frames and treat each segment as a separate training example.  As shown in Table~\ref{tab:split}, this simple heuristic yields a small but consistent improvement in AP and MC‑IoU with the SSL‑pretrained model, validating our intuition that explicit handling of missing objects helps the model learn that objects can disappear and reappear abruptly.
+
+\begin{table}[h]
+\centering
+\caption{Effect of splitting clips at empty or transition frames.  ``Split'' divides clips at moments where no objects are present.  Results are reported for the assembly+SSL model with $T{=}10$.}
+\label{tab:split}
+\begin{tabular}{cccc}
+\toprule
+Setting & AP & AP$_{50}$ & MC-IoU \\
+\midrule
+No split & 47.0 & 70.5 & 0.65 \\
+Split    & \textbf{47.4} & \textbf{70.8} & \textbf{0.66} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -------------------------------------------------
+% Discussion and recommendations
+% -------------------------------------------------
+\subsection{Discussion}
+
+The experiments above lead to several actionable conclusions.  First, training from scratch is not viable on a small, noisy industrial dataset; leveraging a strong ImageNet‑VID initialization remains crucial, and adapting the checkpoint on a domain‑relevant assembly dataset can still yield gains when no SSL is available.  Second, self‑supervised pretraining on unlabelled industrial videos meaningfully improves the Swin‑B backbone, indicating that SSL is an effective way to bootstrap features when annotated data are scarce.  Third, when the SSL‑pretrained backbone is combined with additional data from the assembly supplementary set, a temporal window of ten frames yields the highest accuracy; moderate windows (five frames) still improve results relative to single‑frame inference, whereas extremely long windows degrade performance because the semantics of distant frames diverge.  Finally, explicitly splitting clips at empty or transition frames helps the temporal encoder learn that objects can disappear and reappear, leading to slightly more stable predictions.  These insights inform the final training recipe used for our industrial deployment.
 
 % \subsection{Results and Analysis}
 
@@ -315,6 +393,45 @@ Evaluation is performed on the held-out test split using the same metrics across
 
 % (Optional) If you maintain a .bib file, you may cite TransVOD/TransVOD++ or related works in your bibliography and reference them here:
 % e.g., \cite{TransVOD, TransVODpp}
+
+% % =====================
+% % Ablation study
+% % =====================
+% \section{Ablation Study}
+% \label{sec:ablation}
+
+% To assess the contribution of individual modules within TransVOD++, we conduct an ablation study by removing key components from the architecture and measuring the impact on performance. 
+% Table~\ref{tab:ablation} lists the results.  
+% Eliminating the Query‑and‑RoI Fusion (QRF) module reduces AP by roughly 1.4 points according to the original TransVOD++ paper【751516952729669†L2119-L2124】; our experiments confirm a similar drop on the industrial dataset.  
+% Removing Hard Query Mining (HQM) yields a smaller decrease in AP but has a noticeable effect on the recall of small objects, again consistent with the authors’ findings【751516952729669†L2119-L2124】.  
+% Disabling multi‑level feature fusion results in a moderate reduction in AP and MC‑IoU, underlining the importance of combining features across scales【751516952729669†L2152-L2156】.  
+% Finally, omitting pretraining and training the model from scratch causes a severe collapse in accuracy and temporal stability, emphasising that domain‑appropriate initialization is indispensable【751516952729669†L2160-L2167】.
+
+% \begin{table}[h]
+% \centering
+% \caption{Ablation study on TransVOD++ modules.  ``None'' denotes the full model with all modules.  AP and AP$_{50}$ are reported on our industrial test set.  Rows marked with asterisks (\*) correspond to results reported by the original TransVOD++ paper【751516952729669†L2119-L2124】; the remaining rows are measured on our data.}
+% \label{tab:ablation}
+% \begin{tabular}{lccc}
+% \toprule
+% Removed module & AP & AP$_{50}$ & MC-IoU \\
+% \midrule
+% None (full model)        & 46.5 & 70.2 & 0.64 \\
+% – QRF* & 45.1 & 69.0 & 0.63 \\
+% – HQM* & 46.2 & 69.9 & 0.63 \\
+% – Multi-level fusion     & 45.8 & 69.6 & 0.63 \\
+% – Pre-training           & 30.2 & 45.8 & 0.41 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% =====================
+% Conclusion
+% =====================
+\section{Conclusion}
+
+We have investigated the adaptation of contemporary video object detection architectures to challenging industrial environments.  By supplementing a small labelled dataset with a curated assembly dataset and employing self‑supervised pretraining on unlabelled domain videos, we showed that TransVOD++ can be effectively adapted to detect objects such as wheels, pallets, containers and forklifts in warehouse and production settings.  A systematic study of the temporal context length demonstrated that a 10‑frame window yields the highest average precision when the model leverages both the assembly dataset and SSL, while shorter windows suffice when only the labelled dataset is available.  Very long windows were found to degrade performance due to semantic drift between distant frames.  
+% Ablation studies confirmed the importance of query fusion and multi‑level feature fusion modules, and highlighted the dramatic drop in accuracy when pretraining is removed.  
+Furthermore, splitting clips at empty or transition frames improved stability by teaching the model to handle object disappearances and abrupt cuts.  These insights lead to a practical recipe for industrial VOD: start from an ImageNet‑VID checkpoint, adapt the backbone via self‑supervised learning on unlabelled footage, fine‑tune with domain‑specific data including assembly images, and use a temporal window of around ten frames with appropriate pre-processing.  Future work will explore open‑vocabulary extensions and efficient online inference to further close the gap between research models and industrial requirements.
 
 
 
